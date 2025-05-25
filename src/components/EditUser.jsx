@@ -24,27 +24,33 @@ const EditUser = () => {
   // Fungsinya buat ngecek + memperbarui access token sebelum request dikirim
   axiosJWT.interceptors.request.use(
     async (config) => {
-      // Ambil waktu sekarang, simpan dalam variabel "currentDate"
-      const currentDate = new Date();
+      try {
+        // Ambil waktu sekarang, simpan dalam variabel "currentDate"
+        const currentDate = new Date();
 
-      // Bandingkan waktu expire token dengan waktu sekarang
-      if (expire * 1000 < currentDate.getTime()) {
-        // Kalo access token expire, Request token baru ke endpoint /token
-        const response = await axios.get(`${BASE_URL}/token`);
+        // Bandingkan waktu expire token dengan waktu sekarang
+        if (expire * 1000 < currentDate.getTime()) {
+          // Kalo access token expire, Request token baru ke endpoint /token
+          const response = await axios.get(`${BASE_URL}/token`);
 
-        // Update header Authorization dengan access token baru
-        config.headers.Authorization = `Bearer ${response.data.accessToken}`;
+          // Update header Authorization dengan access token baru
+          config.headers.Authorization = `Bearer ${response.data.accessToken}`;
 
-        // Update token di state
-        setToken(response.data.accessToken);
+          // Update token di state
+          setToken(response.data.accessToken);
 
-        // Decode token baru untuk mendapatkan informasi user
-        const decoded = jwtDecode(response.data.accessToken);
+          // Decode token baru untuk mendapatkan informasi user
+          const decoded = jwtDecode(response.data.accessToken);
 
-        setName(decoded.name); // <- Update state dengan data user dari token
-        setExpire(decoded.exp); // <- Set waktu expire baru
+          setName(decoded.name); // <- Update state dengan data user dari token
+          setExpire(decoded.exp); // <- Set waktu expire baru
+        }
+        return config;
+      } catch (error) {
+        // Kalo misal ada error, langsung balik ke halaman login
+        setToken("");
+        navigate("/");
       }
-      return config;
     },
     (error) => {
       // Kalo misal ada error, langsung balik ke halaman login
